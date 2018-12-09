@@ -75,8 +75,8 @@ public class DispatchServlet extends HttpServlet {
         doAutoWired();
 
 
-        DemoController controller = (DemoController) beanMap.get("demoController");
-        controller.query(null, null, "whd");
+//        DemoController controller = (DemoController) beanMap.get("demoController");
+//        controller.query(null, null, "whd");
 
         /**
          * 将@RequestMapping中配置的url和一个方法method关联上
@@ -150,7 +150,7 @@ public class DispatchServlet extends HttpServlet {
 
                     Class<?>[] interfaces = clazz.getInterfaces();
                     for (Class<?> interfa : interfaces) {
-                        beanMap.put(interfa.getSimpleName(), instance);
+                        beanMap.put(interfa.getName(), instance);
                     }
                 }
             }
