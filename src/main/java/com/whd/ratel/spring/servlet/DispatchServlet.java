@@ -75,8 +75,8 @@ public class DispatchServlet extends HttpServlet {
         doAutoWired();
 
 
-//        DemoController controller = (DemoController) beanMap.get("demoController");
-//        controller.query(null, null, "whd");
+        DemoController controller = (DemoController) beanMap.get("demoController");
+        controller.query(null, null, "whd");
 
         /**
          * 将@RequestMapping中配置的url和一个方法method关联上
@@ -210,7 +210,7 @@ public class DispatchServlet extends HttpServlet {
     /***
      * 将字符串的首字母转化成小写
      * @param str original string
-     * @return
+     * @return str
      */
     private String lowerFirstCase(String str){
         char[] chars = str.toCharArray();
