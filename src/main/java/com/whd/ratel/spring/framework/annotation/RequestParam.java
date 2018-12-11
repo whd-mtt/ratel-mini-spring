@@ -1,16 +1,15 @@
-package com.whd.ratel.spring.annotation;
+package com.whd.ratel.spring.framework.annotation;
 
 import java.lang.annotation.*;
 
 /**
  * @author whd.java@gmail.com
- * @date 2018/12/9 14:10
+ * @date 2018/12/9 14:20
  * @apiNote Describe the function of this class in one sentence
  **/
 @Documented
-@Target({ElementType.TYPE})
+@Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Controller {
-
+public @interface RequestParam {
     String value() default "";
 }

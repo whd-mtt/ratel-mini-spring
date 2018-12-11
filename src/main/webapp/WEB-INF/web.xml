@@ -8,7 +8,7 @@
   <!--This is my servlet-->
   <servlet>
       <servlet-name>ratel-mvc</servlet-name>
-      <servlet-class>com.whd.ratel.spring.servlet.DispatchServlet</servlet-class>
+      <servlet-class>com.whd.ratel.spring.framework.webmvc.servlet.DispatchServlet</servlet-class>
       <init-param>
           <param-name>contextConfigLocation</param-name>
           <param-value>classpath:application.properties</param-value>

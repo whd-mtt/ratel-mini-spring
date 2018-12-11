@@ -1,4 +1,4 @@
-package com.whd.ratel.spring.annotation;
+package com.whd.ratel.spring.framework.annotation;
 
 import java.lang.annotation.*;
 

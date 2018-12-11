@@ -2,7 +2,7 @@ package com.whd.ratel.demo.service.impl;
 
 
 import com.whd.ratel.demo.service.IDemoService;
-import com.whd.ratel.spring.annotation.Service;
+import com.whd.ratel.spring.framework.annotation.Service;
 
 @Service
 public class DemoService implements IDemoService {
