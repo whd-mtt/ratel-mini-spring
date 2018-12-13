@@ -1,6 +1,9 @@
 package com.whd.ratel.spring.framework.webmvc.servlet;
 
 import com.whd.ratel.spring.framework.context.ApplicationContext;
+import com.whd.ratel.spring.framework.webmvc.HandlerAdapter;
+import com.whd.ratel.spring.framework.webmvc.HandlerMapping;
+import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -8,6 +11,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author whd.java@gmail.com
@@ -18,14 +24,71 @@ public class DispatchServlet extends HttpServlet {
 
     private static final String LOCATION = "contextConfigLocation";
 
+    private List<HandlerMapping> handlerMappings = new ArrayList<>();
+
+    private List<HandlerAdapter> handlerAdapters = new ArrayList<>();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+        this.doPost(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        this.doGet(req, resp);
+        String uri = req.getRequestURI();
+        String contextPath = req.getContextPath();
+        String url = uri.replaceAll(contextPath, "").replaceAll("/+", "/");
+
+//        try {
+////            ModelAndView modelAndView = (ModelAndView) handlerMapping.getMethod().invoke(handlerMapping.getController(), null);
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+
+        //对象.方法名
+//        method.invoke()
+
+        doDispatcher(req, resp);
+    }
+
+    /***
+     *
+     * @param req
+     * @param resp
+     */
+    private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) {
+       HandlerMapping handlerMapping =  getHandler(req);
+
+       HandlerAdapter handlerAdapter = getHandlerAdapter(handlerMapping);
+
+       ModelAndView  modelAndView = handlerAdapter.handler(req, resp, handlerMapping);
+
+       processDispatchResult(req, modelAndView);
+    }
+
+    private void processDispatchResult(HttpServletRequest req, ModelAndView modelAndView) {
+
+        //调用viewResolver的resolveView()方法
+    }
+
+    /***
+     * 获取HandlerAdapter处理器适配器
+     * @param handlerMapping
+     * @return
+     */
+    private HandlerAdapter getHandlerAdapter(HandlerMapping handlerMapping) {
+        return null;
+    }
+
+    /***
+     *  获取handlerMapping处理器映射器
+     * @param req
+     * @return
+     */
+    private HandlerMapping getHandler(HttpServletRequest req) {
+        return null;
     }
 
     @Override
@@ -49,6 +112,9 @@ public class DispatchServlet extends HttpServlet {
         //主题解析
         initThemeResolver(context);
         //通过handlerMapping将请求映射到处理器
+        /**
+         * 将controller中配置的RequestMapping和method映射一个对应关系
+         */
         initHandlerMappings(context);
         //通过handlerAdapter进行多类型的参数动态匹配
         initHandlerAdapters(context);
@@ -75,6 +141,10 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private void initHandlerMappings(ApplicationContext context) {
+
+        //按照通常的理解应该是一个map
+        //Map<String, Method> map;
+
 
     }
 
