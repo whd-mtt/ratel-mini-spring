@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.lang.reflect.Method;
+import java.util.regex.Pattern;
 
 /**
  * @author whd.java@gmail.com
@@ -19,5 +20,8 @@ public class HandlerMapping {
 
     private Method method;
 
-    private String url;
+    /***
+     * url的封装
+     */
+    private Pattern pattern;
 }
