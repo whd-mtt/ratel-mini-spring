@@ -1,8 +1,12 @@
 package com.whd.ratel.spring.framework.webmvc.servlet;
 
+import com.whd.ratel.spring.framework.annotation.Controller;
+import com.whd.ratel.spring.framework.annotation.RequestMapping;
+import com.whd.ratel.spring.framework.annotation.RequestParam;
 import com.whd.ratel.spring.framework.context.ApplicationContext;
 import com.whd.ratel.spring.framework.webmvc.HandlerAdapter;
 import com.whd.ratel.spring.framework.webmvc.HandlerMapping;
+import com.whd.ratel.spring.framework.webmvc.ViewResolver;
 import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
 
 import javax.servlet.ServletConfig;
@@ -10,10 +14,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author whd.java@gmail.com
@@ -24,9 +31,21 @@ public class DispatchServlet extends HttpServlet {
 
     private static final String LOCATION = "contextConfigLocation";
 
+    /***
+     * handlerMapping是最核心的设计也是最经典的，它的存在直接干掉了struts/webWork等mvc框架
+     */
     private List<HandlerMapping> handlerMappings = new ArrayList<>();
 
-    private List<HandlerAdapter> handlerAdapters = new ArrayList<>();
+//    private List<HandlerAdapter> handlerAdapters = new ArrayList<>();
+    /***
+     * 这里为了实现方便，直接用mapp实现
+     */
+    private Map<HandlerMapping, HandlerAdapter> handlerAdapters = new HashMap<>();
+
+    /***
+     *
+     */
+    private List<ViewResolver> viewResolvers = new ArrayList<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -49,8 +68,14 @@ public class DispatchServlet extends HttpServlet {
 
         //对象.方法名
 //        method.invoke()
-
-        doDispatcher(req, resp);
+        try {
+            doDispatcher(req, resp);
+        } catch (Exception e) {
+            resp.getWriter().write("500 Exception, Details: \r\n"
+                    + Arrays.toString(e.getStackTrace()).replaceAll("\\[|\\]", "")
+                    .replaceAll("\\s", "\r\n") + "@whdMVC");
+            e.printStackTrace();
+        }
     }
 
     /***
@@ -58,14 +83,17 @@ public class DispatchServlet extends HttpServlet {
      * @param req
      * @param resp
      */
-    private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) {
-       HandlerMapping handlerMapping =  getHandler(req);
+    private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) throws Exception{
+        //根据用户请求的url来取得handler
+        HandlerMapping handlerMapping = getHandler(req);
+        if (handlerMapping == null){
+            resp.getWriter().write("404 not found \r\n @whdMVC");
+        }
+        HandlerAdapter handlerAdapter = getHandlerAdapter(handlerMapping);
 
-       HandlerAdapter handlerAdapter = getHandlerAdapter(handlerMapping);
+        ModelAndView modelAndView = handlerAdapter.handler(req, resp, handlerMapping);
 
-       ModelAndView  modelAndView = handlerAdapter.handler(req, resp, handlerMapping);
-
-       processDispatchResult(req, modelAndView);
+        processDispatchResult(req, modelAndView);
     }
 
     private void processDispatchResult(HttpServletRequest req, ModelAndView modelAndView) {
@@ -88,6 +116,15 @@ public class DispatchServlet extends HttpServlet {
      * @return
      */
     private HandlerMapping getHandler(HttpServletRequest req) {
+        if (this.handlerMappings.isEmpty()){return null;}
+        String uri = req.getRequestURI();
+        String contextPath = req.getContextPath();
+        String url =  uri.replaceAll(contextPath, "").replaceAll("/+", "");
+        for (HandlerMapping handlerMapping : handlerMappings) {
+            Matcher matcher = handlerMapping.getPattern().matcher(url);
+            if (!matcher.matches()){continue;}
+            return handlerMapping;
+        }
         return null;
     }
 
@@ -112,9 +149,7 @@ public class DispatchServlet extends HttpServlet {
         //主题解析
         initThemeResolver(context);
         //通过handlerMapping将请求映射到处理器
-        /**
-         * 将controller中配置的RequestMapping和method映射一个对应关系
-         */
+        //将controller中配置的RequestMapping和method映射一个对应关系
         initHandlerMappings(context);
         //通过handlerAdapter进行多类型的参数动态匹配
         initHandlerAdapters(context);
@@ -140,15 +175,79 @@ public class DispatchServlet extends HttpServlet {
 
     }
 
+    /***
+     * 将controller中配置的RequestMapping和method映射一个对应关系
+     * @param context
+     */
     private void initHandlerMappings(ApplicationContext context) {
 
         //按照通常的理解应该是一个map
         //Map<String, Method> map;
-
-
+        //map.put(url, method)
+        //先从从容器中取到所有的实例
+        String[] beanDefinitionNames = context.getBeanDefinitionNames();
+        for (String beanDefinitionName : beanDefinitionNames) {
+            Object instance = context.getBean(beanDefinitionName);
+            Class<?> clazz = instance.getClass();
+            //但是不是所有的bean都有有Controller注解
+            if (!clazz.isAnnotationPresent(Controller.class)) {
+                continue;
+            }
+            String baseUrl = null;
+            if (!clazz.isAnnotationPresent(RequestMapping.class)) {
+                RequestMapping requestMapping = clazz.getAnnotation(RequestMapping.class);
+                baseUrl = requestMapping.value();
+            }
+            //扫描所有的public方法
+            Method[] methods = clazz.getMethods();
+            for (Method method : methods) {
+                if (!method.isAnnotationPresent(RequestMapping.class)) {
+                    continue;
+                }
+                RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
+                String regex = "/" + baseUrl + requestMapping.value().replaceAll("/+", "/");
+                Pattern pattern = Pattern.compile(regex);
+                this.handlerMappings.add(new HandlerMapping(instance, method, pattern));
+                System.out.println("Mappings: " + regex + ", " + method);
+            }
+        }
     }
 
+    /***
+     * 通过handlerAdapter进行多类型的参数动态匹配
+     * @param context
+     */
     private void initHandlerAdapters(ApplicationContext context) {
+        //在初始化阶段，我哦们要做的是，将这些参数的名字或者类型按照一定得顺序保存下来，
+        //因为后面用反射调用的时候，传入的形参是一个函数
+        //可以通过记录这些参数的位置index挨个从数字中填值，这样的话就和参数的舒徐无关
+        this.handlerMappings.forEach(handlerMapping -> {
+            Map<String, Integer> params = new HashMap<>();
+            //这里只是处理命名参数
+            Annotation[][] parameterAnnotations = handlerMapping.getMethod().getParameterAnnotations();
+            for (int i = 0; i < parameterAnnotations.length; i++) {
+                for (Annotation annotation : parameterAnnotations[i]) {
+                    if (annotation instanceof RequestParam) {
+                        String paramName = ((RequestParam) annotation).value();
+                        if (!"".equals(paramName)) {
+                            params.put(paramName, i);
+                        }
+                    }
+                }
+            }
+            //接下来我们处理非命名参数
+            //只处理request和response
+            //获取参数的参数类型
+            Class<?>[] parameterTypes = handlerMapping.getMethod().getParameterTypes();
+            for (int i = 0; i < parameterTypes.length; i++) {
+                Class<?> type = parameterTypes[i];
+                if (type == HttpServletRequest.class || type == HttpServletResponse.class) {
+                    params.put(type.getName(), i);
+                }
+            }
+
+            this.handlerAdapters.put(handlerMapping, new HandlerAdapter(params));
+        });
 
     }
 
@@ -160,8 +259,20 @@ public class DispatchServlet extends HttpServlet {
 
     }
 
+    /***
+     * 通过viewResolver解析逻辑视图到具体视图实现
+     * @param context
+     */
     private void initViewResolvers(ApplicationContext context) {
-
+        //在页面输入一个http://localhost:8080/first.html
+        //解决一个页面名字和模板文件关联的问题
+        String templates = context.getConfig().getProperty("templates");
+        String templatesPath = this.getClass().getClassLoader().getResource(templates).getFile();
+        File templatesDir = new File(templatesPath);
+        //扫描该路径下的所有的模板文件
+        for (File template : templatesDir.listFiles()) {
+            this.viewResolvers.add(new ViewResolver(template.getName(), template));
+        }
     }
 
     private void initFlashMapManager(ApplicationContext context) {

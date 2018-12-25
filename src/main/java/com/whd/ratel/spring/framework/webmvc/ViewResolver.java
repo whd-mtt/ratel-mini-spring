@@ -2,6 +2,8 @@ package com.whd.ratel.spring.framework.webmvc;
 
 import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
 
+import java.io.File;
+
 /**
  * @author whd.java@gmail.com
  * @date 2018/12/14 0:17
@@ -12,8 +14,13 @@ import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
  **/
 public class ViewResolver {
 
-    public ViewResolver(String viewName){
+    private String viewName;
 
+    private File template;
+
+    public ViewResolver(String viewName, File template){
+        this.viewName = viewName;
+        this.template = template;
     }
 
     public String viewResolver(ModelAndView modelAndView){

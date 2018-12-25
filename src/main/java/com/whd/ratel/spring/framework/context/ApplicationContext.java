@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -174,7 +175,7 @@ public class ApplicationContext implements BeanFactory {
             //生成一个通知事件
             BeanPostProcessor beanPostProcessor = new BeanPostProcessor();
 
-            Object instance = instantionBean(beanDefinition);
+            Object instance = instantiationBean(beanDefinition );
             if (null == instance) {
                 return null;
             }
@@ -204,7 +205,7 @@ public class ApplicationContext implements BeanFactory {
      * @param beanDefinition
      * @return
      */
-    private Object instantionBean(BeanDefinition beanDefinition) {
+    private Object instantiationBean(BeanDefinition beanDefinition) {
 
         Object instance;
         String className = beanDefinition.getBeanClassName();
@@ -222,5 +223,18 @@ public class ApplicationContext implements BeanFactory {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public Properties getConfig(){
+        return this.reader.getConfig();
+    }
+
+
+    public int getBeanDefinitionCount() {
+        return this.beanDefinitionMap.size();
+    }
+
+    public String[] getBeanDefinitionNames() {
+        return this.beanDefinitionMap.keySet().toArray(new String[0]);
     }
 }

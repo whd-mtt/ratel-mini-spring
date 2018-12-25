@@ -4,6 +4,7 @@ import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 /**
  * @author whd.java@gmail.com
@@ -11,6 +12,12 @@ import javax.servlet.http.HttpServletResponse;
  * @apiNote Describe the function of this class in one sentence
  **/
 public class HandlerAdapter {
+
+    private Map<String, Integer> paramMappings;
+
+    public HandlerAdapter(Map<String, Integer> paramMappings) {
+        this.paramMappings = paramMappings;
+    }
 
     /***
      *
