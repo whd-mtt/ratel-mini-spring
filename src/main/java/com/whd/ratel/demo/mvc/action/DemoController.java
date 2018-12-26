@@ -31,7 +31,7 @@ public class DemoController {
 	}
 
 	@RequestMapping("/add*.json")
-	public ModelAndView add(HttpServletRequest request,HttpServletResponse response,
+	public ModelAndView add(HttpServletRequest request, HttpServletResponse response,
 							  @RequestParam("name") String name,@RequestParam("addr") String addr){
 		String result = modifyService.add(name,addr);
 		return out(response,result);

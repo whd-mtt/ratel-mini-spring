@@ -1,5 +1,9 @@
 package com.whd.ratel.spring.framework.webmvc.map;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Map;
 
 /**
@@ -7,29 +11,13 @@ import java.util.Map;
  * @date 2018/12/13 23:12
  * @apiNote Describe the function of this class in one sentence
  **/
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ModelAndView {
 
     private String viewName;
-    private Map<String,?> model;
 
-    public ModelAndView(String viewName, Map<String, ?> model) {
-        this.viewName = viewName;
-        this.model = model;
-    }
+    private Map<String, ?> model;
 
-    public String getViewName() {
-        return viewName;
-    }
-
-    public void setViewName(String viewName) {
-        this.viewName = viewName;
-    }
-
-    public Map<String, ?> getModel() {
-        return model;
-    }
-
-    public void setModel(Map<String, ?> model) {
-        this.model = model;
-    }
 }

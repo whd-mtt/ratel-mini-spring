@@ -54,26 +54,13 @@ public class DispatchServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String uri = req.getRequestURI();
-        String contextPath = req.getContextPath();
-        String url = uri.replaceAll(contextPath, "").replaceAll("/+", "/");
-
-//        try {
-////            ModelAndView modelAndView = (ModelAndView) handlerMapping.getMethod().invoke(handlerMapping.getController(), null);
-//        } catch (IllegalAccessException e) {
-//            e.printStackTrace();
-//        } catch (InvocationTargetException e) {
-//            e.printStackTrace();
-//        }
-
-        //对象.方法名
-//        method.invoke()
         try {
             doDispatcher(req, resp);
         } catch (Exception e) {
-            resp.getWriter().write("500 Exception, Details: \r\n"
+            resp.getWriter().write("<font size='25' color='blue'>500 Exception</font><br/>Details:<br/>"
                     + Arrays.toString(e.getStackTrace()).replaceAll("\\[|\\]", "")
-                    .replaceAll("\\s", "\r\n") + "@whdMVC");
+                    .replaceAll("\\s", "\r\n")
+                    + "<font color='green'><i>Copyright@whdMVC</i></font>");
             e.printStackTrace();
         }
     }
@@ -83,22 +70,38 @@ public class DispatchServlet extends HttpServlet {
      * @param req
      * @param resp
      */
-    private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) throws Exception{
+    private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         //根据用户请求的url来取得handler
         HandlerMapping handlerMapping = getHandler(req);
         if (handlerMapping == null){
-            resp.getWriter().write("404 not found \r\n @whdMVC");
+            resp.getWriter().write("<font size='25' color='red'>404 Not Found</font><br/><font color='green'><i>Copyright@whdMVC</i></font>");
+            return;
         }
         HandlerAdapter handlerAdapter = getHandlerAdapter(handlerMapping);
-
+        //只是调用用方法，得到返回值
         ModelAndView modelAndView = handlerAdapter.handler(req, resp, handlerMapping);
-
-        processDispatchResult(req, modelAndView);
+        //这一步才是真正的输出
+        processDispatchResult(resp, modelAndView);
     }
 
-    private void processDispatchResult(HttpServletRequest req, ModelAndView modelAndView) {
+    /***
+     * 将逻辑视图输出
+     * @param resp
+     * @param modelAndView
+     */
+    private void processDispatchResult(HttpServletResponse resp, ModelAndView modelAndView) throws Exception {
 
         //调用viewResolver的resolveView()方法
+        if (null == modelAndView){return;}
+        if (this.viewResolvers.isEmpty()){return;}
+        for (ViewResolver viewResolver : viewResolvers) {
+            if (!modelAndView.getViewName().equals(viewResolver.getViewName())){continue;}
+            String out = viewResolver.viewResolver(modelAndView);
+            if (out != null){
+                resp.getWriter().write(out);
+                break;
+            }
+        }
     }
 
     /***
@@ -107,7 +110,8 @@ public class DispatchServlet extends HttpServlet {
      * @return
      */
     private HandlerAdapter getHandlerAdapter(HandlerMapping handlerMapping) {
-        return null;
+        if (this.handlerAdapters.isEmpty()){return null;}
+        return this.handlerAdapters.get(handlerMapping);
     }
 
     /***
@@ -119,7 +123,7 @@ public class DispatchServlet extends HttpServlet {
         if (this.handlerMappings.isEmpty()){return null;}
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
-        String url =  uri.replaceAll(contextPath, "").replaceAll("/+", "");
+        String url =  uri.replaceAll(contextPath, "").replaceAll("/+", "/");
         for (HandlerMapping handlerMapping : handlerMappings) {
             Matcher matcher = handlerMapping.getPattern().matcher(url);
             if (!matcher.matches()){continue;}
@@ -129,7 +133,7 @@ public class DispatchServlet extends HttpServlet {
     }
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init(ServletConfig config) {
 
         ApplicationContext applicationContext = new ApplicationContext(config.getInitParameter(LOCATION));
         //初始化策略
@@ -142,6 +146,8 @@ public class DispatchServlet extends HttpServlet {
      * <p>May be overridden in subclasses in order to initialize further strategy objects.
      */
     private void initStrategies(ApplicationContext context) {
+
+        // =============  这里说的就是springmvc的九大组件 ================
         //文件上传解析，如果请求类型是Multipart将通过multiResolver进行文件解析
         initMultipartResolver(context);
         //本地化解析
@@ -205,7 +211,8 @@ public class DispatchServlet extends HttpServlet {
                     continue;
                 }
                 RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-                String regex = "/" + baseUrl + requestMapping.value().replaceAll("/+", "/");
+                String regex = ("/" + baseUrl + requestMapping.value().replaceAll("\\*", ".*"))
+                        .replaceAll("/+", "/");
                 Pattern pattern = Pattern.compile(regex);
                 this.handlerMappings.add(new HandlerMapping(instance, method, pattern));
                 System.out.println("Mappings: " + regex + ", " + method);
@@ -229,7 +236,7 @@ public class DispatchServlet extends HttpServlet {
                 for (Annotation annotation : parameterAnnotations[i]) {
                     if (annotation instanceof RequestParam) {
                         String paramName = ((RequestParam) annotation).value();
-                        if (!"".equals(paramName)) {
+                        if (!"".equals(paramName.trim())) {
                             params.put(paramName, i);
                         }
                     }

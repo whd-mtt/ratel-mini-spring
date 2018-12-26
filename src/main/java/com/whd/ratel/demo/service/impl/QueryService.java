@@ -3,21 +3,22 @@ package com.whd.ratel.demo.service.impl;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.gupaoedu.vip.spring.demo.service.IModifyService;
-import com.gupaoedu.vip.spring.demo.service.IQueryService;
-import com.gupaoedu.vip.spring.formework.annotation.GPService;
+
+import com.whd.ratel.demo.service.IQueryService;
+import com.whd.ratel.spring.framework.annotation.Service;
 
 /**
  * 查询业务
  * @author Tom
  *
  */
-@GPService
+@Service
 public class QueryService implements IQueryService {
 
 	/**
 	 * 查询
 	 */
+	@Override
 	public String query(String name) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String time = sdf.format(new Date());

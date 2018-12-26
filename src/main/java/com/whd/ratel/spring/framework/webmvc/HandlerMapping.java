@@ -2,6 +2,7 @@ package com.whd.ratel.spring.framework.webmvc;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
@@ -13,6 +14,7 @@ import java.util.regex.Pattern;
  **/
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class HandlerMapping {
 

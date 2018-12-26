@@ -47,7 +47,7 @@ public class ApplicationContext implements BeanFactory {
         refresh();
     }
 
-    public void refresh() {
+    private void refresh() {
 
         //定位
         this.reader = new BeanDefinitionReader(configLocations);
