@@ -1,14 +1,19 @@
 package com.whd.ratel.spring.framework.beans;
 
+import com.whd.ratel.spring.framework.aop.AopConfig;
+import com.whd.ratel.spring.framework.aop.AopProxy;
 import com.whd.ratel.spring.framework.core.FactoryBean;
+import lombok.Data;
 
 /**
  * @author whd.java@gmail.com
  * @date 2018/12/10 22:36
  * @apiNote Describe the function of this class in one sentence
  **/
+@Data
 public class BeanWrapper extends FactoryBean {
 
+    private AopProxy aopProxy = new AopProxy();
     //还会用到 观察者模式
     //1.支持事件响应会有一个监听
 
@@ -21,31 +26,10 @@ public class BeanWrapper extends FactoryBean {
      */
     private Object originalInstance;
 
-    public BeanPostProcessor getBeanPostProcessor() {
-        return beanPostProcessor;
-    }
-
-    public void setBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
-        this.beanPostProcessor = beanPostProcessor;
-    }
-
-    public Object getOriginalInstance() {
-        return originalInstance;
-    }
-
-    public void setOriginalInstance(Object originalInstance) {
-        this.originalInstance = originalInstance;
-    }
-
     public BeanWrapper(Object instance){
-        this.wrapperInstance = instance;
+        this.wrapperInstance = aopProxy.getProxy(instance);
         this.originalInstance = instance;
     }
-
-    public Object getWrapperInstance(){
-        return this.wrapperInstance;
-    }
-
 
     /***
      * 返回代理以后的class,可能会是$Proxy0
@@ -53,5 +37,9 @@ public class BeanWrapper extends FactoryBean {
      */
     public Class<?> getWrappedClass(){
         return this.wrapperInstance.getClass();
+    }
+
+    public void setAopConfig(AopConfig aopConfig){
+        aopProxy.setConfig(aopConfig);
     }
 }

@@ -3,6 +3,7 @@ package com.whd.ratel.spring.framework.context;
 import com.whd.ratel.spring.framework.annotation.Autowired;
 import com.whd.ratel.spring.framework.annotation.Controller;
 import com.whd.ratel.spring.framework.annotation.Service;
+import com.whd.ratel.spring.framework.aop.AopConfig;
 import com.whd.ratel.spring.framework.beans.BeanDefinition;
 import com.whd.ratel.spring.framework.beans.BeanPostProcessor;
 import com.whd.ratel.spring.framework.beans.BeanWrapper;
@@ -10,27 +11,25 @@ import com.whd.ratel.spring.framework.context.support.BeanDefinitionReader;
 import com.whd.ratel.spring.framework.core.BeanFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author whd.java@gmail.com
  * @date 2018/12/10 22:16
  * @apiNote Describe the function of this class in one sentence
  **/
-public class ApplicationContext implements BeanFactory {
+public class ApplicationContext extends DefaultListableBeanFactory implements BeanFactory {
 
     private String[] configLocations;
 
     private BeanDefinitionReader reader;
-
-    /***
-     * beanDefinitionMap用来保存配置信息
-     */
-    private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(16);
 
     /***
      * 用来保证注册式单例的容器
@@ -70,7 +69,9 @@ public class ApplicationContext implements BeanFactory {
 
         this.beanDefinitionMap.forEach( (beanName, value) -> {
             if (!value.isLazyInit()){
-                getBean(beanName);
+                //这里拿到的是通过aop代理的对象
+                Object bean = getBean(beanName);
+                System.out.println("bean = " + bean);
             }
         });
 
@@ -183,6 +184,8 @@ public class ApplicationContext implements BeanFactory {
             beanPostProcessor.postProcessBeforeInitialization(instance, beanClassName);
 
             BeanWrapper beanWrapper = new BeanWrapper(instance);
+            //设置代理配置
+            beanWrapper.setAopConfig(instantiationAopConfig(beanDefinition));
             beanWrapper.setBeanPostProcessor(beanPostProcessor);
             this.beanWrapperMap.put(beanName, beanWrapper);
 
@@ -195,9 +198,38 @@ public class ApplicationContext implements BeanFactory {
             return this.beanWrapperMap.get(beanName).getWrapperInstance();
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        return null;
+    /***
+     *
+     * @param beanDefinition
+     * @return
+     */
+    private AopConfig instantiationAopConfig(BeanDefinition beanDefinition) throws Exception {
+        AopConfig aopConfig = new AopConfig();
+        String expression = reader.getConfig().getProperty("pointcut");
+        String[] before = reader.getConfig().getProperty("aspectBefore").split("\\s");
+        String[] after = reader.getConfig().getProperty("aspectAfter").split("\\s");
+
+        String className = beanDefinition.getBeanClassName();
+        Class<?> clazz = Class.forName(className);
+
+        Pattern pattern = Pattern.compile(expression);
+
+        Class<?> aspectClass = Class.forName(before[0]);
+        for (Method method : clazz.getMethods()) {
+            //public .* com\.whd\.ratel\.demo\.service\..*Service\..*\(.*\)
+            //public java.lang.String com.whd.ratel.demo.service.impl.ModifyService.add(java.lang.String, java.lang.String)
+            Matcher matcher = pattern.matcher(method.toString());
+            if (matcher.matches()){
+                //能满足切面规则的类添加到aop配置中去
+                aopConfig.put(method, aspectClass.newInstance(),
+                        new Method[]{aspectClass.getMethod(before[1]), aspectClass.getMethod(after[1])});
+            }
+        }
+        return aopConfig;
     }
 
     /***
@@ -236,5 +268,13 @@ public class ApplicationContext implements BeanFactory {
 
     public String[] getBeanDefinitionNames() {
         return this.beanDefinitionMap.keySet().toArray(new String[0]);
+    }
+
+    /**
+     * 刷新BeanFactory实现
+     */
+    @Override
+    protected void refreshBeanFactory() {
+
     }
 }
