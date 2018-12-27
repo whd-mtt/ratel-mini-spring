@@ -52,11 +52,15 @@ public class HandlerAdapter {
             //所以要针对我们传过来的参数进行类型转换
             paramValues[index] = caseStringValue(value, parameterTypes[index]);
         }
-        int reqIndex = this.paramMappings.get(HttpServletRequest.class.getName());
-        paramValues[reqIndex] = req;
+        if (this.paramMappings.containsKey(HttpServletRequest.class.getName())){
+            int reqIndex = this.paramMappings.get(HttpServletRequest.class.getName());
+            paramValues[reqIndex] = req;
+        }
 
-        int respIndex = this.paramMappings.get(HttpServletResponse.class.getName());
-        paramValues[respIndex] = resp;
+        if (this.paramMappings.containsKey(HttpServletResponse.class.getName())){
+            int respIndex = this.paramMappings.get(HttpServletResponse.class.getName());
+            paramValues[respIndex] = resp;
+        }
         //4.从handler中去除controller/method,然后利用反射机制调用
         Object result = handlerMapping.getMethod().invoke(handlerMapping.getController(), paramValues);
         if (result == null) {return null;}

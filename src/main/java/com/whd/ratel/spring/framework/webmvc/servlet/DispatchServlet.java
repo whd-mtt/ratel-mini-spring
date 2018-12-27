@@ -8,6 +8,7 @@ import com.whd.ratel.spring.framework.webmvc.HandlerAdapter;
 import com.whd.ratel.spring.framework.webmvc.HandlerMapping;
 import com.whd.ratel.spring.framework.webmvc.ViewResolver;
 import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
  * @date 2018/12/10 22:22
  * @apiNote Describe the function of this class in one sentence
  **/
+@Slf4j
 public class DispatchServlet extends HttpServlet {
 
     private static final String LOCATION = "contextConfigLocation";
@@ -38,7 +40,7 @@ public class DispatchServlet extends HttpServlet {
 
 //    private List<HandlerAdapter> handlerAdapters = new ArrayList<>();
     /***
-     * 这里为了实现方便，直接用mapp实现
+     * 这里为了实现方便，直接用map实现
      */
     private Map<HandlerMapping, HandlerAdapter> handlerAdapters = new HashMap<>();
 
@@ -73,7 +75,7 @@ public class DispatchServlet extends HttpServlet {
     private void doDispatcher(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         //根据用户请求的url来取得handler
         HandlerMapping handlerMapping = getHandler(req);
-        if (handlerMapping == null){
+        if (handlerMapping == null) {
             resp.getWriter().write("<font size='25' color='red'>404 Not Found</font><br/><font color='green'><i>Copyright@whdMVC</i></font>");
             return;
         }
@@ -92,12 +94,12 @@ public class DispatchServlet extends HttpServlet {
     private void processDispatchResult(HttpServletResponse resp, ModelAndView modelAndView) throws Exception {
 
         //调用viewResolver的resolveView()方法
-        if (null == modelAndView){return;}
-        if (this.viewResolvers.isEmpty()){return;}
+        if (null == modelAndView) { return; }
+        if (this.viewResolvers.isEmpty()) { return; }
         for (ViewResolver viewResolver : viewResolvers) {
-            if (!modelAndView.getViewName().equals(viewResolver.getViewName())){continue;}
+            if (!modelAndView.getViewName().equals(viewResolver.getViewName())) { continue; }
             String out = viewResolver.viewResolver(modelAndView);
-            if (out != null){
+            if (out != null) {
                 resp.getWriter().write(out);
                 break;
             }
@@ -110,23 +112,23 @@ public class DispatchServlet extends HttpServlet {
      * @return
      */
     private HandlerAdapter getHandlerAdapter(HandlerMapping handlerMapping) {
-        if (this.handlerAdapters.isEmpty()){return null;}
+        if (this.handlerAdapters.isEmpty()) { return null; }
         return this.handlerAdapters.get(handlerMapping);
     }
 
     /***
-     *  获取handlerMapping处理器映射器
+     * 获取handlerMapping处理器映射器
      * @param req
      * @return
      */
     private HandlerMapping getHandler(HttpServletRequest req) {
-        if (this.handlerMappings.isEmpty()){return null;}
+        if (this.handlerMappings.isEmpty()) { return null; }
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
-        String url =  uri.replaceAll(contextPath, "").replaceAll("/+", "/");
+        String url = uri.replaceAll(contextPath, "").replaceAll("/+", "/");
         for (HandlerMapping handlerMapping : handlerMappings) {
             Matcher matcher = handlerMapping.getPattern().matcher(url);
-            if (!matcher.matches()){continue;}
+            if (!matcher.matches()) {continue;}
             return handlerMapping;
         }
         return null;
@@ -195,12 +197,12 @@ public class DispatchServlet extends HttpServlet {
         for (String beanDefinitionName : beanDefinitionNames) {
             Object instance = context.getBean(beanDefinitionName);
             Class<?> clazz = instance.getClass();
-            //但是不是所有的bean都有有Controller注解
+            //但是不是所有的bean都有Controller注解
             if (!clazz.isAnnotationPresent(Controller.class)) {
                 continue;
             }
-            String baseUrl = null;
-            if (!clazz.isAnnotationPresent(RequestMapping.class)) {
+            String baseUrl = "";
+            if (clazz.isAnnotationPresent(RequestMapping.class)) {
                 RequestMapping requestMapping = clazz.getAnnotation(RequestMapping.class);
                 baseUrl = requestMapping.value();
             }
@@ -215,6 +217,7 @@ public class DispatchServlet extends HttpServlet {
                         .replaceAll("/+", "/");
                 Pattern pattern = Pattern.compile(regex);
                 this.handlerMappings.add(new HandlerMapping(instance, method, pattern));
+                log.info("mapping映射为Mappings: {}, {}", regex, method);
                 System.out.println("Mappings: " + regex + ", " + method);
             }
         }
@@ -277,8 +280,11 @@ public class DispatchServlet extends HttpServlet {
         String templatesPath = this.getClass().getClassLoader().getResource(templates).getFile();
         File templatesDir = new File(templatesPath);
         //扫描该路径下的所有的模板文件
-        for (File template : templatesDir.listFiles()) {
-            this.viewResolvers.add(new ViewResolver(template.getName(), template));
+        File[] files = templatesDir.listFiles();
+        if (Objects.nonNull(files) && files.length > 0) {
+            for (File template : files) {
+                this.viewResolvers.add(new ViewResolver(template.getName(), template));
+            }
         }
     }
 

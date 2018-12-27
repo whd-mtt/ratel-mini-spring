@@ -30,25 +30,29 @@ public class ViewResolver {
     private static Pattern pattern = Pattern.compile("￥\\{(.+?)\\}", Pattern.CASE_INSENSITIVE);
 
     public String viewResolver(ModelAndView modelAndView) throws Exception {
-        StringBuffer buffer = new StringBuffer();
-
+        StringBuilder builder = new StringBuilder();
         RandomAccessFile randomAccessFile = new RandomAccessFile(this.template, "r");
-
-        String line;
-        while (null != (line = randomAccessFile.readLine())){
-            Matcher matcher = matcher(line);
-            while (matcher.find()) {
-                for (int i = 0; i < matcher.groupCount(); i++) {
-                    //要把人名币符号￥{}中间的字符串取出来
-                    String paramName = matcher.group(i);
-                    Object paramValue = modelAndView.getModel().get(paramName);
-                    if (null == paramValue){continue;}
-                    line = line.replaceAll("￥\\{"+ paramName +"\\}", paramValue.toString());
+        try {
+            String line;
+            while (null != (line = randomAccessFile.readLine())){
+                line = new String(line.getBytes("ISO-8859-1"), "utf-8");
+                Matcher matcher = matcher(line);
+                while (matcher.find()) {
+                    for (int i = 1; i <= matcher.groupCount(); i++) {
+                        //要把人名币符号￥{}中间的字符串取出来
+                        String paramName = matcher.group(i);
+                        Object paramValue = modelAndView.getModel().get(paramName);
+                        if (null == paramValue){continue;}
+                        line = line.replaceAll("￥\\{"+ paramName +"\\}", paramValue.toString());
+                        line = new String(line.getBytes("utf-8"), "ISO-8859-1");
+                    }
                 }
+                builder.append(line);
             }
-            buffer.append(line);
+        } finally {
+            randomAccessFile.close();
         }
-        return null;
+        return builder.toString();
     }
 
     /***

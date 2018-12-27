@@ -17,6 +17,9 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <servlet.version>2.5</servlet.version>
+    <jetty.plugins.version>6.1.26</jetty.plugins.version>
+    <lombok.version>1.16.10</lombok.version>
+    <slf4j-api.version>1.7.25</slf4j-api.version>
   </properties>
 
   <dependencies>
@@ -29,13 +32,19 @@
     <dependency>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>maven-jetty-plugin</artifactId>
-        <version>6.1.26</version>
+        <version>${jetty.plugins.version}</version>
     </dependency>
 
     <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
-        <version>1.16.10</version>
+        <version>${lombok.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j-api.version}</version>
     </dependency>
   </dependencies>
 
@@ -46,7 +55,7 @@
       <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>maven-jetty-plugin</artifactId>
-        <version>6.1.26</version>
+        <version>${jetty.plugins.version}</version>
         <configuration>
           <webDefaultXml>src/main/resources/webdefault.xml</webDefaultXml>
           <contextPath>/</contextPath>

@@ -84,7 +84,7 @@ public class ApplicationContext implements BeanFactory {
      * @param beanName
      * @param instance
      */
-    public void populateBean(String beanName, Object instance){
+    private void populateBean(String beanName, Object instance){
         Class<?> clazz = instance.getClass();
         //只有加了controller和service注解的才
         if (!(clazz.isAnnotationPresent(Controller.class) ||
