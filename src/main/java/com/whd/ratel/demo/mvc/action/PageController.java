@@ -10,11 +10,13 @@ import com.whd.ratel.spring.framework.webmvc.map.ModelAndView;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
  * 公布接口url
- * @author Tom
- *
- */
+ * @author whd.java@gmail.com
+ * @date 2018/12/27 22:35
+ * @apiNote DemoController
+ **/
 @Controller
 @RequestMapping("/")
 public class PageController {

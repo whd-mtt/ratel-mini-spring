@@ -12,6 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
+/**
+ * @author whd.java@gmail.com
+ * @date 2018/12/27 22:35
+ * @apiNote DemoController
+ **/
 @Controller
 @RequestMapping("/demo")
 public class DemoController {

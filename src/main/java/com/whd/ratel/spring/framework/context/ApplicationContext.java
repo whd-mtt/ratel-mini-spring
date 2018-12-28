@@ -71,7 +71,7 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
             if (!value.isLazyInit()){
                 //这里拿到的是通过aop代理的对象
                 Object bean = getBean(beanName);
-                System.out.println("bean = " + bean);
+                System.out.println("bean = " + bean.getClass());
             }
         });
 
@@ -103,7 +103,7 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
             }
             field.setAccessible(true);
             try {
-                field.set(instance, this.beanWrapperMap.get(autowiredName).getWrapperInstance());
+                field.set(instance, this.beanWrapperMap.get(autowiredName).getOriginalInstance());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -177,9 +177,7 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
             BeanPostProcessor beanPostProcessor = new BeanPostProcessor();
 
             Object instance = instantiationBean(beanDefinition );
-            if (null == instance) {
-                return null;
-            }
+            if (null == instance) {return null;}
             //在实例初始化以前调用一次
             beanPostProcessor.postProcessBeforeInitialization(instance, beanClassName);
 
@@ -219,6 +217,7 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
         Pattern pattern = Pattern.compile(expression);
 
         Class<?> aspectClass = Class.forName(before[0]);
+        //在这里得到的方法是一个原生的方法
         for (Method method : clazz.getMethods()) {
             //public .* com\.whd\.ratel\.demo\.service\..*Service\..*\(.*\)
             //public java.lang.String com.whd.ratel.demo.service.impl.ModifyService.add(java.lang.String, java.lang.String)

@@ -7,11 +7,12 @@ import java.util.Date;
 import com.whd.ratel.demo.service.IQueryService;
 import com.whd.ratel.spring.framework.annotation.Service;
 
+
 /**
- * 查询业务
- * @author Tom
- *
- */
+ * @author whd.java@gmail.com
+ * @date 2018/12/27 22:35
+ * @apiNote DemoController
+ **/
 @Service
 public class QueryService implements IQueryService {
 

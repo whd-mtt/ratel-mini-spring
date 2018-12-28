@@ -2,9 +2,10 @@ package com.whd.ratel.demo.service;
 
 /**
  * 增删改业
- * @author Tom
- *
- */
+ * @author whd.java@gmail.com
+ * @date 2018/12/27 22:35
+ * @apiNote Describe the function of this class in one sentence
+ **/
 public interface IModifyService {
 
 	/**

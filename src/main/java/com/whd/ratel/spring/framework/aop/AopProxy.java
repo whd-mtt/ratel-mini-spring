@@ -52,15 +52,18 @@ public class AopProxy implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+        Method m = this.target.getClass().getMethod(method.getName(), method.getParameterTypes());
+        //通过原生方法去找，通过代理方法是找不到的
         //在原始方法执行之前执行的增强代码
-        if (this.config.contains(method)){
+        if (this.config.contains(m)){
             AopConfig.Aspect aspect = config.get(method);
             aspect.getPoints()[0].invoke(aspect);
         }
         //反射调用原始方法
         Object object = method.invoke(this.target, args);
         //在原始方法调用以后执行增强的代码
-        if (this.config.contains(method)){
+        if (this.config.contains(m)){
             AopConfig.Aspect aspect = config.get(method);
             aspect.getPoints()[1].invoke(aspect);
         }

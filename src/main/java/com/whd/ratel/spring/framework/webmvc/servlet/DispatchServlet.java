@@ -3,6 +3,7 @@ package com.whd.ratel.spring.framework.webmvc.servlet;
 import com.whd.ratel.spring.framework.annotation.Controller;
 import com.whd.ratel.spring.framework.annotation.RequestMapping;
 import com.whd.ratel.spring.framework.annotation.RequestParam;
+import com.whd.ratel.spring.framework.aop.AopProxyUtils;
 import com.whd.ratel.spring.framework.context.ApplicationContext;
 import com.whd.ratel.spring.framework.webmvc.HandlerAdapter;
 import com.whd.ratel.spring.framework.webmvc.HandlerMapping;
@@ -194,32 +195,36 @@ public class DispatchServlet extends HttpServlet {
         //map.put(url, method)
         //先从从容器中取到所有的实例
         String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        for (String beanDefinitionName : beanDefinitionNames) {
-            Object instance = context.getBean(beanDefinitionName);
-            Class<?> clazz = instance.getClass();
-            //但是不是所有的bean都有Controller注解
-            if (!clazz.isAnnotationPresent(Controller.class)) {
-                continue;
-            }
-            String baseUrl = "";
-            if (clazz.isAnnotationPresent(RequestMapping.class)) {
-                RequestMapping requestMapping = clazz.getAnnotation(RequestMapping.class);
-                baseUrl = requestMapping.value();
-            }
-            //扫描所有的public方法
-            Method[] methods = clazz.getMethods();
-            for (Method method : methods) {
-                if (!method.isAnnotationPresent(RequestMapping.class)) {
-                    continue;
+        try {
+            for (String beanDefinitionName : beanDefinitionNames) {
+                //到了mvc层，对外提供的方法只有一个getBean()方法
+                //返回的对象不是beanWrapper,而是返回的一个代理对象
+                Object proxy = context.getBean(beanDefinitionName);
+                //通过AopProxyUtils工具类获取原始对象
+                Object controller = AopProxyUtils.getSingletonTarget(proxy);
+                Class<?> clazz = controller.getClass();
+                //但是不是所有的bean都有Controller注解
+                if (!clazz.isAnnotationPresent(Controller.class)) {continue;}
+                String baseUrl = "";
+                if (clazz.isAnnotationPresent(RequestMapping.class)) {
+                    RequestMapping requestMapping = clazz.getAnnotation(RequestMapping.class);
+                    baseUrl = requestMapping.value();
                 }
-                RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-                String regex = ("/" + baseUrl + requestMapping.value().replaceAll("\\*", ".*"))
-                        .replaceAll("/+", "/");
-                Pattern pattern = Pattern.compile(regex);
-                this.handlerMappings.add(new HandlerMapping(instance, method, pattern));
-                log.info("mapping映射为Mappings: {}, {}", regex, method);
-                System.out.println("Mappings: " + regex + ", " + method);
+                //扫描所有的public方法
+                Method[] methods = clazz.getMethods();
+                for (Method method : methods) {
+                    if (!method.isAnnotationPresent(RequestMapping.class)) {continue;}
+                    RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
+                    String regex = ("/" + baseUrl + requestMapping.value().replaceAll("\\*", ".*"))
+                            .replaceAll("/+", "/");
+                    Pattern pattern = Pattern.compile(regex);
+                    this.handlerMappings.add(new HandlerMapping(controller, method, pattern));
+                    log.info("mapping映射为Mappings: {}, {}", regex, method);
+                    System.out.println("Mappings: " + regex + ", " + method);
+                }
             }
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 

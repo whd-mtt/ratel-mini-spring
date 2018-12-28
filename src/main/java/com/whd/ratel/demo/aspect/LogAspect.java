@@ -12,6 +12,7 @@ public class LogAspect {
      */
     public void before(){
         //这个方法中的逻辑是由我们的自己写的
+        System.out.println("invoke before method!");
     }
 
 
@@ -19,6 +20,6 @@ public class LogAspect {
      * 在调用切面方法之后执行after()方法
      */
     public void after(){
-
+        System.out.println("invoke after method!");
     }
 }
