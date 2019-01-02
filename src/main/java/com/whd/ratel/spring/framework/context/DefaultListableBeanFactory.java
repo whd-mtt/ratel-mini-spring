@@ -20,7 +20,6 @@ public class DefaultListableBeanFactory extends AbstractApplicationContext {
 
     @Override
     protected void onRefresh() {
-        super.onRefresh();
     }
 
     /**

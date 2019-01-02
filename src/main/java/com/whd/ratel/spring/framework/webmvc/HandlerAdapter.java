@@ -42,7 +42,7 @@ public class HandlerAdapter {
         //3.构造实参列表
         Object[] paramValues = new Object[parameterTypes.length];
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-            String value = Arrays.toString(entry.getValue()).replaceAll("\\[\\]", "")
+            String value = Arrays.toString(entry.getValue()).replaceAll("\\[|\\]", "")
                     .replaceAll("\\s", "");
             if (!this.paramMappings.containsKey(entry.getKey())) {
                 continue;

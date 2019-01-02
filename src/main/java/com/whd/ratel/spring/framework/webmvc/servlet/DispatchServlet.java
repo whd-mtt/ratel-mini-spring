@@ -218,7 +218,7 @@ public class DispatchServlet extends HttpServlet {
                     String regex = ("/" + baseUrl + requestMapping.value().replaceAll("\\*", ".*"))
                             .replaceAll("/+", "/");
                     Pattern pattern = Pattern.compile(regex);
-                    this.handlerMappings.add(new HandlerMapping(controller, method, pattern));
+                    this.handlerMappings.add(HandlerMapping.from(controller, method, pattern));
                     log.info("mapping映射为Mappings: {}, {}", regex, method);
                     System.out.println("Mappings: " + regex + ", " + method);
                 }

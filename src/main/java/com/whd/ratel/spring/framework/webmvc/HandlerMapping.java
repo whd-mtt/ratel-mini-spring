@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "from")
 public class HandlerMapping {
 
     private Object controller;

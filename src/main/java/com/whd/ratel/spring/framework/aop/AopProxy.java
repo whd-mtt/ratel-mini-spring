@@ -58,14 +58,14 @@ public class AopProxy implements InvocationHandler {
         //在原始方法执行之前执行的增强代码
         if (this.config.contains(m)){
             AopConfig.Aspect aspect = config.get(m);
-            aspect.getPoints()[0].invoke(aspect);
+            aspect.getPoints()[0].invoke(aspect.getAspects());
         }
         //反射调用原始方法
         Object object = method.invoke(this.target, args);
         //在原始方法调用以后执行增强的代码
         if (this.config.contains(m)){
             AopConfig.Aspect aspect = config.get(m);
-            aspect.getPoints()[1].invoke(aspect);
+            aspect.getPoints()[1].invoke(aspect.getAspects());
         }
         //将最原始的返回值返回出去
         return object;
