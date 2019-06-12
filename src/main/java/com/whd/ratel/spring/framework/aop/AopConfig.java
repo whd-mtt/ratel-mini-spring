@@ -23,7 +23,7 @@ public class AopConfig {
     private Map<Method, Aspect> points = new HashMap<>();
 
     public void put(Method target, Object aspect, Method[] methods){
-        this.points.put(target, Aspect.from(aspect, methods));
+        this.points.put(target, new Aspect(aspect, methods));
     }
 
     public Aspect get(Method method){
@@ -39,7 +39,7 @@ public class AopConfig {
      */
     @Data
     @NoArgsConstructor
-    @AllArgsConstructor(staticName = "from")
+    @AllArgsConstructor
     class Aspect {
         /***
          * 待会将LogAspect这个对象赋值给它
